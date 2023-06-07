@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "products", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ProductController2 {
     private final List<Product> productDB = new ArrayList<>();
 
@@ -75,7 +75,7 @@ public class ProductController2 {
 
 
 
-    @PostMapping("/products")
+    @PostMapping
     public ResponseEntity<Product> createProduct(@RequestBody Product request) {
         boolean isIdDuplicated = productDB.stream()
                 .anyMatch(p -> p.getId().equals(request.getId()));
@@ -98,7 +98,7 @@ public class ProductController2 {
         return ResponseEntity.created(location).body(product);
     }
 
-    @PutMapping("/products/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<Product> replaceProduct(
             @PathVariable("id") String id, @RequestBody Product request) {
         Optional<Product> productOp = productDB.stream()
@@ -116,7 +116,7 @@ public class ProductController2 {
         }
     }
 
-    @DeleteMapping("/products/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Product> deleteProduct(
             @PathVariable("id") String id){
         boolean isRemoved = productDB.removeIf(p -> p.getId().equals(id));
