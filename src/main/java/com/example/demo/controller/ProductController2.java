@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 
 import com.example.demo.Entity.Product;
+import com.example.demo.parameter.ProductQueryParameter;
 import jakarta.annotation.PostConstruct;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -11,9 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -30,7 +29,7 @@ public class ProductController2 {
         productDB.add(new Product("B0005", "Human Resource Management", 330));
     }
 
-    @GetMapping("/products/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Product> getProduct(@PathVariable("id") String id) {
         Optional<Product> productOp = productDB.stream()
                 .filter(p -> p.getId().equals(id))
@@ -45,6 +44,7 @@ public class ProductController2 {
 
 
     }
+    /*
 
     @GetMapping("/products")
     public ResponseEntity<List<Product>> getProducts(
@@ -55,6 +55,25 @@ public class ProductController2 {
 
         return ResponseEntity.ok().body(products);
     }
+*/
+
+
+    @GetMapping
+    public ResponseEntity<List<Product>> getProducts(@ModelAttribute ProductQueryParameter param){
+        String keyword = param.getKeyword();
+        String orderBy = param.getOrderBy();
+        String sortRule = param.getSortRule();
+        Comparator<Product> comparator = genSortComparator(orderBy, sortRule);
+
+        List<Product> products = productDB.stream()
+                .filter(p -> p.getName().toUpperCase().contains(keyword.toUpperCase()))
+                .sorted(comparator)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok().body(products);
+    }
+
+
 
     @PostMapping("/products")
     public ResponseEntity<Product> createProduct(@RequestBody Product request) {
@@ -105,6 +124,23 @@ public class ProductController2 {
         return isRemoved
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
+    }
+
+    private Comparator<Product> genSortComparator(String orderBy, String sortRule){
+        Comparator<Product> comparator = (p1, p2) -> 0;
+        if (Objects.isNull(orderBy) || (Objects.isNull(sortRule))){
+            return comparator;
+        }
+
+        if (orderBy.equalsIgnoreCase("price")){
+            comparator = Comparator.comparing(Product::getPrice);
+        } else if ( orderBy.equalsIgnoreCase("name")) {
+            comparator = Comparator.comparing(Product::getName);
+        }
+
+        return sortRule.equalsIgnoreCase("desc")
+                ? comparator.reversed()
+                : comparator;
     }
 
 }
